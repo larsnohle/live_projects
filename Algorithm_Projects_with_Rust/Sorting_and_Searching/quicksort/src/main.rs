@@ -1,4 +1,4 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH, Instant};
 use std::io;
 use std::io::Write;
 
@@ -10,9 +10,12 @@ fn main() {
     let num_items = get_i32("Please enter the number of items: ");
     let max = get_i32("Please enter the max value of an item: ");
     let mut vector_to_sort = make_random_vec(num_items, max);
-    print_vec(&vector_to_sort, max);
+    //print_vec(&vector_to_sort, max);
+    let now = Instant::now();
     quicksort(&mut vector_to_sort);
-    print_vec(&vector_to_sort, max);
+    //print_vec(&vector_to_sort, max);
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
     check_sorted(&vector_to_sort);
 }
 
