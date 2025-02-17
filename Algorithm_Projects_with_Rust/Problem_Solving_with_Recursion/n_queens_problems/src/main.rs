@@ -10,11 +10,6 @@ const UNVISITED: char = '.';
 const QUEEN: char = 'Q';
 
 fn main() {
-    // let board = create_reference_solution();
-    // board_is_a_solution(&board, NUM_ROWS as u32);
-
-
-
     // Create a NUM_ROWS x NUM_COLS array with all entries Initialized to UNVISITED.
     let mut board = [[UNVISITED; NUM_COLS]; NUM_ROWS];
 
@@ -34,20 +29,6 @@ fn main() {
 
     dump_board(&board);
 }
-
-// fn create_reference_solution() -> [[char; NUM_COLS]; NUM_ROWS]{
-//     let mut board = [[UNVISITED; NUM_COLS]; NUM_ROWS];
-//     board[0][5] = QUEEN;
-//     board[1][3] = QUEEN;
-//     board[2][6] = QUEEN;
-//     board[3][0] = QUEEN;
-//     board[4][7] = QUEEN;
-//     board[5][1] = QUEEN;
-//     board[6][4] = QUEEN;
-//     board[7][2] = QUEEN;
-//
-//     board
-// }
 
 fn place_queens_1(board: &mut [[char; NUM_COLS]; NUM_ROWS], row_index: usize, col_index: usize) -> bool {
     // Have we examined all squares? I.e. is row_index >= the number of rows.
