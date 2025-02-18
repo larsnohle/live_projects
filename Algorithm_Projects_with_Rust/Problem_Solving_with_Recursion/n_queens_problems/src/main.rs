@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 // The board dimensions.
-const NUM_ROWS: usize = 6;
+const NUM_ROWS: usize = 8;
 const NUM_COLS: usize = NUM_ROWS;
 const INUM_ROWS: i32 = NUM_ROWS as i32;
 const INUM_COLS: i32 = NUM_COLS as i32;
@@ -14,8 +14,8 @@ fn main() {
     let mut board = [[UNVISITED; NUM_COLS]; NUM_ROWS];
 
     let start = Instant::now();
-    let success = place_queens_1(&mut board, 0, 0);
-    //let success = place_queens_2(& mut board, 0, 0, 0);
+    //let success = place_queens_1(&mut board, 0, 0);
+    let success = place_queens_2(&mut board, 0, 0, 0);
     //let success = place_queens_3(& mut board);
     let duration = start.elapsed();
 
@@ -135,4 +135,39 @@ fn dump_board(board: &[[char; NUM_COLS]; NUM_ROWS]) {
         }
         println!();
     }
+}
+
+fn place_queens_2(board: &mut [[char; NUM_COLS]; NUM_ROWS], row_index: usize, col_index: usize, num_placed: usize) -> bool {
+    // Have we placed all the queens? In that case, check if the board is a solution.
+    if num_placed == NUM_ROWS {
+        return board_is_a_solution(board, NUM_ROWS as u32);
+    }
+
+    // Have we examined all squares? I.e. is row_index >= the number of rows.
+    if row_index >= NUM_ROWS {
+        return board_is_a_solution(board, NUM_ROWS as u32);
+    }
+
+    // OK, we're not finished yet.
+    // Handle the two cases:
+    // 1. We do not place a Queen on this square
+    // or
+    // 2. We do place a queen on this square.
+    let (next_row_index, next_col_index) = next_square(row_index, col_index);
+
+    // First try without placing a queen on this square. If that is successful, we are done.
+    if place_queens_2(board, next_row_index, next_col_index, num_placed) {
+        return true;
+    }
+
+    // OK, we did not find a solution when this square was left empty. Try placing a queen here.
+    board[row_index][col_index] = QUEEN;
+    if place_queens_2(board, next_row_index, next_col_index, num_placed + 1) {
+        return true;
+    }
+
+    // That did not work either => this path was a dead end.
+    // Remove the queen and backtrack.
+    board[row_index][col_index] = UNVISITED;
+    false
 }
