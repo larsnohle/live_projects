@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 // The board dimensions.
-const NUM_ROWS: usize = 8;
+const NUM_ROWS: usize = 12;
 const NUM_COLS: usize = NUM_ROWS;
 const INUM_ROWS: i32 = NUM_ROWS as i32;
 const INUM_COLS: i32 = NUM_COLS as i32;
@@ -15,8 +15,8 @@ fn main() {
 
     let start = Instant::now();
     //let success = place_queens_1(&mut board, 0, 0);
-    let success = place_queens_2(&mut board, 0, 0, 0);
-    //let success = place_queens_3(& mut board);
+    //let success = place_queens_2(&mut board, 0, 0, 0);
+    let success = place_queens_3(& mut board);
     let duration = start.elapsed();
 
     println!("Execution time: {:?}", duration);
@@ -170,4 +170,109 @@ fn place_queens_2(board: &mut [[char; NUM_COLS]; NUM_ROWS], row_index: usize, co
     // Remove the queen and backtrack.
     board[row_index][col_index] = UNVISITED;
     false
+}
+
+fn place_queens_3(board: &mut [[char; NUM_COLS]; NUM_ROWS]) -> bool {
+    // Generate attack counts matrix.
+    let mut attack_counts: [[i8; NUM_COLS]; NUM_ROWS] = [[0; NUM_COLS]; NUM_ROWS];
+
+    place_queens_3_recurse(board, 0,0,&mut attack_counts)
+}
+
+fn place_queens_3_recurse(board: &mut [[char; NUM_COLS]; NUM_ROWS], row_index: usize, col_index: usize, attack_counts: &mut [[i8; NUM_COLS]; NUM_ROWS]) -> bool {
+    // Have we examined all squares? I.e. is row_index >= the number of rows.
+    if row_index >= NUM_ROWS {
+        return board_is_a_solution(board, NUM_ROWS as u32);
+    }
+
+    // OK, we're not finished yet.
+    // Handle the two cases:
+    // 1. We do not place a Queen on this square
+    // or
+    // 2. We do place a queen on this square.
+    let (next_row_index, next_col_index) = next_square(row_index, col_index);
+
+    // First try without placing a queen on this square. If that is successful, we are done.
+    if place_queens_3_recurse(board, next_row_index, next_col_index, attack_counts) {
+        return true;
+    }
+
+    // OK, we did not find a solution when this square was left empty.
+    // Can we place a queen here?
+    if attack_counts[row_index][col_index] == 0 {
+        // Place a queen.
+        board[row_index][col_index] = QUEEN;
+
+        // Adjust the attack counts matrix.
+        adjust_attack_counts(attack_counts, row_index, col_index, 1);
+
+        // And call ourselves recursively.
+        if place_queens_3_recurse(board, next_row_index, next_col_index, attack_counts) {
+            // We found a solution!
+            return true;
+        }
+
+        // That did not work either => this path was a dead end.
+        // Remove the queen and backtrack.
+        board[row_index][col_index] = UNVISITED;
+        adjust_attack_counts(attack_counts, row_index, col_index, -1);
+    }
+
+    // Either we could not place a queen on the square due to it being attacked by another queen
+    // or we there was no solution when we did not place a queen on the square. In either case,
+    // we returns false to backtrack.
+    false
+}
+
+fn adjust_attack_counts(attack_counts: &mut [[i8; NUM_COLS]; NUM_ROWS], row_index: usize, col_index: usize, delta: i8) {
+    // Adjust the attack count of the square in question.
+    attack_counts[row_index][col_index] += delta;
+
+    let row_index_as_i8 = row_index as i8;
+    let col_index_as_i8 = col_index as i8;
+
+    // Adjust the attack counts of the squares a queen placed on this square can reach.
+    for i in 1..NUM_ROWS {
+        let i_as_i8 = i as i8;
+
+        // Same row to the right.
+        if row_index + i < NUM_ROWS {
+            attack_counts[row_index + i][col_index] += delta;
+        }
+
+        // Same row to the left.
+        if row_index_as_i8 - i_as_i8 >= 0 {
+            attack_counts[row_index - i][col_index] += delta;
+        }
+
+        // Same col down.
+        if col_index + i < NUM_COLS {
+            attack_counts[row_index][col_index + i] += delta;
+        }
+
+        // Same col up.
+        if col_index_as_i8 - i_as_i8 >= 0 {
+            attack_counts[row_index][col_index - i] += delta;
+        }
+
+        // Diagonal up left.
+        if row_index_as_i8 - i_as_i8 >= 0 && col_index_as_i8- i_as_i8 >= 0 {
+            attack_counts[row_index - i][col_index - i] += delta;
+        }
+
+        // Diagonal up right.
+        if row_index_as_i8 - i_as_i8 >= 0 && col_index + i < NUM_COLS {
+            attack_counts[row_index - i][col_index + i] += delta;
+        }
+
+        // Diagonal down right.
+        if row_index + i < NUM_ROWS && col_index + i < NUM_COLS {
+            attack_counts[row_index + i][col_index + i] += delta;
+        }
+
+        // Diagonal down left.
+        if row_index + i < NUM_ROWS && col_index_as_i8 - i_as_i8 >= 0 {
+            attack_counts[row_index + i][col_index - i] += delta;
+        }
+    }
 }
